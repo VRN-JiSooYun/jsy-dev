@@ -1,0 +1,26 @@
+# custom_bashrc
+# /etc/profile.d/custom_bashrc.sh 로 들어갑니다.
+
+# prompt
+parse_git_branch() {                                                                                                                                                     
+     git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'                                                                                                  
+}                                                                                                                                                                        
+export PS1="\u@\h \[\033[32m\]\w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] $ "
+
+# aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias grep='grep --color=auto'
+alias ..='cd ..'
+alias ...='cd ../..'
+
+# history
+export HISTSIZE=50000
+export HISTFILESIZE=100000
+shopt -s histappend
+PROMPT_COMMAND="history -a; history -n; $PROMPT_COMMAND"
+
+# editor
+export EDITOR=vim
+export VISUAL=vim
