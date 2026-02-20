@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: dev-postgres
+    environment:
+      POSTGRES_DB: sample_vgw
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "54321:5432"
+    volumes:
+      - dev-postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  dev-postgres_data:

@@ -1,51 +1,53 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="dev-ubuntu:24.04"
+IMAGE="ghcr.io/vrn-jisooyun/vdev-ubuntu:latest"
 
-if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 <container_name> [--] [extra docker run args...]"
-  echo "Example: $0 dev-jisoo"
+if [[ $# -lt 3 ]]; then
+  echo "Usage: $0 <container_name> <ssh_port> <web_port>"
+  echo "Example: $0 dev1 2222 8080"
   exit 1
 fi
 
-NAME="$1"
-shift || true
+PREFIX="$1"
+SSH_PORT="$2"
+WEB_PORT="$3"
 
-VOLUME="devdata_${NAME}"
-WORKDIR="/workspace"
+NAME="${PREFIX}_${SSH_PORT}_${WEB_PORT}"
 
-# 볼륨 없으면 생성
-if ! docker volume inspect "$VOLUME" >/dev/null 2>&1; then
-  docker volume create "$VOLUME" >/dev/null
-  echo "[+] Created volume: $VOLUME"
-fi
 
-# 기존 컨테이너 존재 여부 확인
+V_HOME="vdev_home_${NAME}"
+V_WS="vdev_ws_${NAME}"
+
+# 볼륨 생성 (없으면)
+docker volume create "$V_HOME" >/dev/null 2>&1 || true
+docker volume create "$V_WS"   >/dev/null 2>&1 || true
+
+# 이미 존재하는 컨테이너 제거 (원하면 유지 로직으로 바꿀 수 있음)
 if docker ps -a --format '{{.Names}}' | grep -qx "$NAME"; then
-  if docker ps --format '{{.Names}}' | grep -qx "$NAME"; then
-    echo "[i] Container '$NAME' is already running."
-  else
-    echo "[i] Starting existing container '$NAME'..."
-    docker start "$NAME" >/dev/null
-  fi
-else
-  echo "[+] Creating and starting container '$NAME'..."
-  docker run -d \
-    --name "$NAME" \
-    --hostname "$NAME" \
-    -v "${VOLUME}:${WORKDIR}" \
-    -w "${WORKDIR}" \
-    -it \
-    --restart unless-stopped \
-    "$IMAGE" \
-    "$@"
+  echo "[i] Removing existing container $NAME"
+  docker rm -f "$NAME"
 fi
 
+echo "[+] Starting container $NAME"
+docker run -d \
+  --name "$NAME" \
+  --hostname "$NAME" \
+  -p "${SSH_PORT}:22" \
+  -p "${WEB_PORT}:8080" \
+  -v "${V_HOME}:/home/dev" \
+  -v "${V_WS}:/workspace" \
+  -w /workspace \
+  --restart unless-stopped \
+  "$IMAGE"
+
 echo
-echo "Attach shell:"
-echo "  docker exec -it \"$NAME\" bash"
-echo
-echo "Data volume:"
-echo "  $VOLUME -> $WORKDIR"
+echo "========================================"
+echo "Container: $NAME"
+echo "SSH:  ssh dev@localhost -p $SSH_PORT"
+echo "WEB:  http://localhost:$WEB_PORT"
+echo "Data volumes:"
+echo "  $V_HOME -> /home/dev"
+echo "  $V_WS   -> /workspace"
+echo "========================================"
 

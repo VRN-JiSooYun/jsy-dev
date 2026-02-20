@@ -1,13 +1,14 @@
 services:
   dev-ubuntu:
-    image: ubuntu:latest
+    image: ghcr.io/vrn-jisooyun/vdev-ubuntu:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: dev-ubuntu
     tty: true
     stdin_open: true
     ports:
       - "0.0.0.0:1455:1455"
-    volumes:
-      - dev-ubuntu_data:/
 
 volumes:
   dev-ubuntu_data:
