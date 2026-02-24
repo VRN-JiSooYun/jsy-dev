@@ -13,15 +13,12 @@ PREFIX="$1"
 SSH_PORT="$2"
 WEB_PORT="$3"
 
-NAME="${PREFIX}_${SSH_PORT}_${WEB_PORT}"
+NAME="${PREFIX}_${SSH_PORT}"
 
-
-V_HOME="vdev_home_${NAME}"
-V_WS="vdev_ws_${NAME}"
+V_HOME="vdev_${NAME}"
 
 # 볼륨 생성 (없으면)
 docker volume create "$V_HOME" >/dev/null 2>&1 || true
-docker volume create "$V_WS"   >/dev/null 2>&1 || true
 
 # 이미 존재하는 컨테이너 제거 (원하면 유지 로직으로 바꿀 수 있음)
 if docker ps -a --format '{{.Names}}' | grep -qx "$NAME"; then
@@ -35,9 +32,8 @@ docker run -d \
   --hostname "$NAME" \
   -p "${SSH_PORT}:22" \
   -p "${WEB_PORT}:8080" \
-  -v "${V_HOME}:/home/dev" \
-  -v "${V_WS}:/workspace" \
-  -w /workspace \
+  -p "8081:8081" \
+  -v "${V_HOME}:/root" \
   --restart unless-stopped \
   "$IMAGE"
 
@@ -47,7 +43,6 @@ echo "Container: $NAME"
 echo "SSH:  ssh dev@localhost -p $SSH_PORT"
 echo "WEB:  http://localhost:$WEB_PORT"
 echo "Data volumes:"
-echo "  $V_HOME -> /home/dev"
-echo "  $V_WS   -> /workspace"
+echo "  $V_HOME -> /root"
 echo "========================================"
 

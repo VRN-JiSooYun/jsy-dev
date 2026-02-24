@@ -1,6 +1,6 @@
 services:
   dev-ubuntu:
-    image: ghcr.io/vrn-jisooyun/vdev-ubuntu:latest
+    image: ghcr.io/vrn-jisooyun/vdev-ubuntu:${TAG_NAME}
     build:
       context: .
       dockerfile: Dockerfile
